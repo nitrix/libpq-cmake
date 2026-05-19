@@ -19,13 +19,6 @@ target_add_library(foo libpq::libpq)
 otherwise to the static one. The static and shared targets are also exposed
 explicitly as `libpq::libpq_static` and `libpq::libpq_shared`.
 
-## Testing
-
-```bash
-cmake --build build
-PG_CONNINFO="host=localhost port=5432 user=postgres password=postgres dbname=postgres" ctest --test-dir build --output-on-failure
-```
-
 ## CMake options
 
 | Option               | Default | Description                                           |
