@@ -1,0 +1,6 @@
+# Always store PostgreSQL sources with LF endings so autoconf/Make on Windows
+# (and our perl-driven generators) work regardless of core.autocrlf settings.
+vendor/postgres/** text eol=lf
+*.cmake text eol=lf
+CMakeLists.txt text eol=lf
+*.sh text eol=lf

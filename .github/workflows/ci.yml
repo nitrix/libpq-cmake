@@ -1,0 +1,193 @@
+name: ci
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------
+  linux:
+    name: linux-clang
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libssl-dev
+      - name: Configure
+        env: { CC: clang }
+        run: cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build
+      - name: Test (live Postgres 17)
+        env:
+          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+        run: ctest --test-dir build --output-on-failure
+
+  # ---------------------------------------------------------------------
+  macos:
+    name: macos-clang
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install cmake ninja openssl@3 postgresql@17
+      - name: Start Postgres 17
+        run: |
+          brew services start postgresql@17
+          for i in $(seq 1 30); do
+            if /opt/homebrew/opt/postgresql@17/bin/pg_isready -h localhost -p 5432; then break; fi
+            sleep 1
+          done
+          /opt/homebrew/opt/postgresql@17/bin/createuser -s postgres || true
+          /opt/homebrew/opt/postgresql@17/bin/psql -U postgres -d postgres \
+            -c "ALTER USER postgres WITH PASSWORD 'postgres'" || true
+          /opt/homebrew/opt/postgresql@17/bin/createdb -U postgres postgres || true
+      - name: Configure
+        run: |
+          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        env:
+          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+        run: ctest --test-dir build --output-on-failure
+
+  # ---------------------------------------------------------------------
+  windows-msvc:
+    name: windows-msvc
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - name: Install OpenSSL via vcpkg
+        shell: pwsh
+        run: |
+          vcpkg install openssl:x64-windows
+      - name: Install Postgres 17
+        shell: pwsh
+        run: |
+          choco install postgresql17 --params "/Password:postgres" --no-progress -y
+          $env:Path += ";$env:ProgramFiles\PostgreSQL\17\bin"
+          "$env:ProgramFiles\PostgreSQL\17\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          # Confirm it accepts the password
+          $env:PGPASSWORD = "postgres"
+          for ($i=0; $i -lt 30; $i++) {
+            if (pg_isready -h localhost -p 5432) { break }
+            Start-Sleep -Seconds 2
+          }
+      - name: Configure
+        shell: pwsh
+        run: |
+          cmake -G "Visual Studio 17 2022" -A x64 -S . -B build `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Test
+        shell: pwsh
+        env:
+          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  # ---------------------------------------------------------------------
+  windows-msys2-clang64:
+    name: windows-msys2-clang64
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: CLANG64
+          update: true
+          install: >-
+            git
+            mingw-w64-clang-x86_64-clang
+            mingw-w64-clang-x86_64-cmake
+            mingw-w64-clang-x86_64-ninja
+            mingw-w64-clang-x86_64-openssl
+            mingw-w64-clang-x86_64-pkgconf
+      - name: Install Postgres 17 (native, started via choco)
+        shell: pwsh
+        run: |
+          choco install postgresql17 --params "/Password:postgres" --no-progress -y
+          $env:PGPASSWORD = "postgres"
+          for ($i=0; $i -lt 30; $i++) {
+            if (& "$env:ProgramFiles\PostgreSQL\17\bin\pg_isready.exe" -h localhost -p 5432) { break }
+            Start-Sleep -Seconds 2
+          }
+      - name: Configure
+        run: |
+          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        env:
+          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+        run: ctest --test-dir build --output-on-failure
+
+  # ---------------------------------------------------------------------
+  windows-cygwin:
+    name: windows-cygwin
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+      - uses: cygwin/cygwin-install-action@v4
+        with:
+          packages: >-
+            gcc-core
+            cmake
+            make
+            libssl-devel
+            pkg-config
+            git
+      - name: Install Postgres 17 (native, served on TCP)
+        shell: pwsh
+        run: |
+          choco install postgresql17 --params "/Password:postgres" --no-progress -y
+          $env:PGPASSWORD = "postgres"
+          for ($i=0; $i -lt 30; $i++) {
+            if (& "$env:ProgramFiles\PostgreSQL\17\bin\pg_isready.exe" -h localhost -p 5432) { break }
+            Start-Sleep -Seconds 2
+          }
+      - name: Configure
+        shell: C:\cygwin\bin\bash.exe -eo pipefail '{0}'
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc
+      - name: Build
+        shell: C:\cygwin\bin\bash.exe -eo pipefail '{0}'
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          cmake --build build -- -j$(nproc)
+      - name: Test
+        shell: C:\cygwin\bin\bash.exe -eo pipefail '{0}'
+        env:
+          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          ctest --test-dir build --output-on-failure

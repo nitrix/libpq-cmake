@@ -1,0 +1,16 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+if(@LIBPQ_WITH_OPENSSL@)
+    find_dependency(OpenSSL)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/libpq-cmake-targets.cmake")
+
+# Exclude the host build tools — they're not consumed by downstreams.
+foreach(_t gen_errcodes gen_keywordlist)
+    if(TARGET libpq::${_t})
+        set_property(TARGET libpq::${_t} PROPERTY IMPORTED_GLOBAL FALSE)
+    endif()
+endforeach()

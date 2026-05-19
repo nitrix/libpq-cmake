@@ -1,0 +1,9 @@
+/* libpq-cmake: pg_config_ext.h — installed header that exposes the int64
+ * spelling chosen by ConfigureChecks.cmake. */
+#ifndef PG_CONFIG_EXT_H
+#define PG_CONFIG_EXT_H
+
+/* Define to the name of a signed 64-bit integer type. */
+#cmakedefine PG_INT64_TYPE @PG_INT64_TYPE@
+
+#endif /* PG_CONFIG_EXT_H */

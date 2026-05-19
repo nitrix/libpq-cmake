@@ -1,0 +1,297 @@
+/* libpq-cmake: CMake-driven replacement for src/include/pg_config.h.
+ * Probes live in cmake/ConfigureChecks.cmake. */
+
+#ifndef PG_CONFIG_H
+#define PG_CONFIG_H
+
+/* --- Constants always defined --------------------------------------- */
+#define BLCKSZ                       @BLCKSZ@
+#define XLOG_BLCKSZ                  @XLOG_BLCKSZ@
+#define RELSEG_SIZE                  @RELSEG_SIZE@
+#define DEF_PGPORT                   @DEF_PGPORT@
+#define DEF_PGPORT_STR               @DEF_PGPORT_STR@
+#define PG_KRB_SRVNAM                @PG_KRB_SRVNAM@
+#define MEMSET_LOOP_LIMIT            @MEMSET_LOOP_LIMIT@
+#define PROFILE_PID_DIR              @PROFILE_PID_DIR@
+#define CONFIGURE_ARGS               @CONFIGURE_ARGS@
+#define PACKAGE_NAME                 @PACKAGE_NAME@
+#define PACKAGE_TARNAME              @PACKAGE_TARNAME@
+#define PACKAGE_VERSION              @PACKAGE_VERSION@
+#define PACKAGE_STRING               @PACKAGE_STRING@
+#define PACKAGE_BUGREPORT            @PACKAGE_BUGREPORT@
+#define PACKAGE_URL                  @PACKAGE_URL@
+#define DLSUFFIX                     @DLSUFFIX@
+#define PG_VERSION                   "@PG_VERSION@"
+#define PG_MAJORVERSION              "@PG_MAJORVERSION@"
+#define PG_MAJORVERSION_NUM          @PG_MAJORVERSION_NUM@
+#define PG_MINORVERSION_NUM          @PG_MINORVERSION_NUM@
+#define PG_VERSION_NUM               @PG_VERSION_NUM@
+#define PG_VERSION_STR               @PG_VERSION_STR@
+
+/* --- Value defines (computed by CMake) ------------------------------ */
+#cmakedefine SIZEOF_LONG             @SIZEOF_LONG@
+#cmakedefine SIZEOF_OFF_T            @SIZEOF_OFF_T@
+#cmakedefine SIZEOF_SIZE_T           @SIZEOF_SIZE_T@
+#cmakedefine SIZEOF_VOID_P           @SIZEOF_VOID_P@
+#cmakedefine SIZEOF_BOOL             @SIZEOF_BOOL@
+#cmakedefine ALIGNOF_SHORT           @ALIGNOF_SHORT@
+#cmakedefine ALIGNOF_INT             @ALIGNOF_INT@
+#cmakedefine ALIGNOF_LONG            @ALIGNOF_LONG@
+#cmakedefine ALIGNOF_LONG_LONG_INT   @ALIGNOF_LONG_LONG_INT@
+#cmakedefine ALIGNOF_DOUBLE          @ALIGNOF_DOUBLE@
+#cmakedefine ALIGNOF_PG_INT128_TYPE  @ALIGNOF_PG_INT128_TYPE@
+#cmakedefine MAXIMUM_ALIGNOF         @MAXIMUM_ALIGNOF@
+#cmakedefine PG_INT64_TYPE           @PG_INT64_TYPE@
+#cmakedefine PG_INT128_TYPE          @PG_INT128_TYPE@
+#cmakedefine INT64_MODIFIER          @INT64_MODIFIER@
+#cmakedefine PG_C_PRINTF_ATTRIBUTE   @PG_C_PRINTF_ATTRIBUTE@
+#cmakedefine PG_CXX_PRINTF_ATTRIBUTE @PG_CXX_PRINTF_ATTRIBUTE@
+#cmakedefine OPENSSL_API_COMPAT      @OPENSSL_API_COMPAT@
+#cmakedefine _FILE_OFFSET_BITS       @_FILE_OFFSET_BITS@
+#cmakedefine _LARGEFILE_SOURCE       @_LARGEFILE_SOURCE@
+#cmakedefine _LARGE_FILES            @_LARGE_FILES@
+#cmakedefine STRERROR_R_INT          1
+
+/* PG_USE_STDBOOL: define if <stdbool.h> works */
+#cmakedefine PG_USE_STDBOOL          1
+
+/* --- Header presence (HAVE_<HEADER>_H) ------------------------------ */
+#cmakedefine HAVE_ATOMIC_H 1
+#cmakedefine HAVE_COPYFILE_H 1
+#cmakedefine HAVE_CRTDEFS_H 1
+#cmakedefine HAVE_EDITLINE_HISTORY_H 1
+#cmakedefine HAVE_EDITLINE_READLINE_H 1
+#cmakedefine HAVE_EXECINFO_H 1
+#cmakedefine HAVE_GETOPT_H 1
+#cmakedefine HAVE_GSSAPI_H 1
+#cmakedefine HAVE_GSSAPI_GSSAPI_H 1
+#cmakedefine HAVE_GSSAPI_EXT_H 1
+#cmakedefine HAVE_GSSAPI_GSSAPI_EXT_H 1
+#cmakedefine HAVE_HISTORY_H 1
+#cmakedefine HAVE_IFADDRS_H 1
+#cmakedefine HAVE_INTTYPES_H 1
+#cmakedefine HAVE_LANGINFO_H 1
+#cmakedefine HAVE_MBARRIER_H 1
+#cmakedefine HAVE_MEMORY_H 1
+#cmakedefine HAVE_OSSP_UUID_H 1
+#cmakedefine HAVE_PAM_PAM_APPL_H 1
+#cmakedefine HAVE_READLINE_H 1
+#cmakedefine HAVE_READLINE_HISTORY_H 1
+#cmakedefine HAVE_READLINE_READLINE_H 1
+#cmakedefine HAVE_SECURITY_PAM_APPL_H 1
+#cmakedefine HAVE_STDINT_H 1
+#cmakedefine HAVE_STDLIB_H 1
+#cmakedefine HAVE_STRING_H 1
+#cmakedefine HAVE_STRINGS_H 1
+#cmakedefine HAVE_SYS_EPOLL_H 1
+#cmakedefine HAVE_SYS_EVENT_H 1
+#cmakedefine HAVE_SYS_PERSONALITY_H 1
+#cmakedefine HAVE_SYS_PRCTL_H 1
+#cmakedefine HAVE_SYS_PROCCTL_H 1
+#cmakedefine HAVE_SYS_SIGNALFD_H 1
+#cmakedefine HAVE_SYS_STAT_H 1
+#cmakedefine HAVE_SYS_TYPES_H 1
+#cmakedefine HAVE_SYS_UCRED_H 1
+#cmakedefine HAVE_TERMIOS_H 1
+#cmakedefine HAVE_UCRED_H 1
+#cmakedefine HAVE_UNISTD_H 1
+#cmakedefine HAVE_UUID_H 1
+#cmakedefine HAVE_UUID_UUID_H 1
+#define STDC_HEADERS 1
+
+/* --- Function presence (HAVE_<FUNC>) -------------------------------- */
+#cmakedefine HAVE_BACKTRACE_SYMBOLS 1
+#cmakedefine HAVE_COPYFILE 1
+#cmakedefine HAVE_COPY_FILE_RANGE 1
+#cmakedefine HAVE_EXPLICIT_BZERO 1
+#cmakedefine HAVE_FSEEKO 1
+#cmakedefine HAVE_GETIFADDRS 1
+#cmakedefine HAVE_GETOPT 1
+#cmakedefine HAVE_GETOPT_LONG 1
+#cmakedefine HAVE_GETPEEREID 1
+#cmakedefine HAVE_GETPEERUCRED 1
+#cmakedefine HAVE_HISTORY_TRUNCATE_FILE 1
+#cmakedefine HAVE_INET_ATON 1
+#cmakedefine HAVE_INET_PTON 1
+#cmakedefine HAVE_KQUEUE 1
+#cmakedefine HAVE_MBSTOWCS_L 1
+#cmakedefine HAVE_MKDTEMP 1
+#cmakedefine HAVE_POSIX_FADVISE 1
+#cmakedefine HAVE_POSIX_FALLOCATE 1
+#cmakedefine HAVE_PPOLL 1
+#cmakedefine HAVE_PTHREAD_BARRIER_WAIT 1
+#cmakedefine HAVE_PTHREAD_IS_THREADED_NP 1
+#cmakedefine HAVE_RL_COMPLETION_MATCHES 1
+#cmakedefine HAVE_RL_FILENAME_COMPLETION_FUNCTION 1
+#cmakedefine HAVE_RL_RESET_SCREEN_SIZE 1
+#cmakedefine HAVE_RL_VARIABLE_BIND 1
+#cmakedefine HAVE_SETPROCTITLE 1
+#cmakedefine HAVE_SETPROCTITLE_FAST 1
+#cmakedefine HAVE_STRERROR_R 1
+#cmakedefine HAVE_STRLCAT 1
+#cmakedefine HAVE_STRLCPY 1
+#cmakedefine HAVE_STRNLEN 1
+#cmakedefine HAVE_STRSIGNAL 1
+#cmakedefine HAVE_SYNCFS 1
+#cmakedefine HAVE_SYNC_FILE_RANGE 1
+#cmakedefine HAVE_TIMINGSAFE_BCMP 1
+#cmakedefine HAVE_USELOCALE 1
+#cmakedefine HAVE_WCSTOMBS_L 1
+
+/* --- HAVE_DECL_* (0 or 1, always defined) --------------------------- */
+#cmakedefine01 HAVE_DECL_FDATASYNC
+#cmakedefine01 HAVE_DECL_F_FULLFSYNC
+#cmakedefine01 HAVE_DECL_MEMSET_S
+#cmakedefine01 HAVE_DECL_POSIX_FADVISE
+#cmakedefine01 HAVE_DECL_PREADV
+#cmakedefine01 HAVE_DECL_PWRITEV
+#cmakedefine01 HAVE_DECL_STRCHRNUL
+#cmakedefine01 HAVE_DECL_STRLCAT
+#cmakedefine01 HAVE_DECL_STRLCPY
+#cmakedefine01 HAVE_DECL_STRNLEN
+#cmakedefine01 HAVE_DECL_TIMINGSAFE_BCMP
+
+/* LLVM is not used in this client-only build */
+#define HAVE_DECL_LLVMCREATEGDBREGISTRATIONLISTENER 0
+#define HAVE_DECL_LLVMCREATEPERFJITEVENTLISTENER 0
+
+/* --- Types and structs ---------------------------------------------- */
+#cmakedefine HAVE_SOCKLEN_T 1
+#cmakedefine HAVE_STRUCT_OPTION 1
+#cmakedefine HAVE_STRUCT_SOCKADDR_SA_LEN 1
+#cmakedefine HAVE_STRUCT_TM_TM_ZONE 1
+#cmakedefine HAVE_INT64 1
+#cmakedefine HAVE_INT8 1
+#cmakedefine HAVE_UINT64 1
+#cmakedefine HAVE_UINT8 1
+#cmakedefine HAVE_UNION_SEMUN 1
+#cmakedefine HAVE_LONG_INT_64 1
+#cmakedefine HAVE_LONG_LONG_INT_64 1
+
+#cmakedefine HAVE_INT_OPTERR 1
+#cmakedefine HAVE_INT_OPTRESET 1
+#cmakedefine HAVE_INT_TIMEZONE 1
+#cmakedefine HAVE_TYPEOF 1
+#cmakedefine HAVE_VISIBILITY_ATTRIBUTE 1
+#cmakedefine HAVE_COMPUTED_GOTO 1
+#cmakedefine HAVE_I_CONSTRAINT__BUILTIN_CONSTANT_P 1
+
+/* --- Compiler builtins ---------------------------------------------- */
+#cmakedefine HAVE__BUILTIN_BSWAP16 1
+#cmakedefine HAVE__BUILTIN_BSWAP32 1
+#cmakedefine HAVE__BUILTIN_BSWAP64 1
+#cmakedefine HAVE__BUILTIN_CLZ 1
+#cmakedefine HAVE__BUILTIN_CONSTANT_P 1
+#cmakedefine HAVE__BUILTIN_CTZ 1
+#cmakedefine HAVE__BUILTIN_FRAME_ADDRESS 1
+#cmakedefine HAVE__BUILTIN_OP_OVERFLOW 1
+#cmakedefine HAVE__BUILTIN_POPCOUNT 1
+#cmakedefine HAVE__BUILTIN_TYPES_COMPATIBLE_P 1
+#cmakedefine HAVE__BUILTIN_UNREACHABLE 1
+#cmakedefine HAVE__CONFIGTHREADLOCALE 1
+#cmakedefine HAVE__CPUID 1
+#cmakedefine HAVE__CPUIDEX 1
+#cmakedefine HAVE__GET_CPUID 1
+#cmakedefine HAVE__GET_CPUID_COUNT 1
+#cmakedefine HAVE__STATIC_ASSERT 1
+#cmakedefine HAVE_XSAVE_INTRINSICS 1
+#cmakedefine HAVE_X86_64_POPCNTQ 1
+
+/* --- Atomics / sync builtins --------------------------------------- */
+#cmakedefine HAVE_ATOMICS 1
+#cmakedefine HAVE_SPINLOCKS 1
+#cmakedefine HAVE_GCC__ATOMIC_INT32_CAS 1
+#cmakedefine HAVE_GCC__ATOMIC_INT64_CAS 1
+#cmakedefine HAVE_GCC__SYNC_CHAR_TAS 1
+#cmakedefine HAVE_GCC__SYNC_INT32_CAS 1
+#cmakedefine HAVE_GCC__SYNC_INT32_TAS 1
+#cmakedefine HAVE_GCC__SYNC_INT64_CAS 1
+
+/* --- pthreads ------------------------------------------------------- */
+#cmakedefine HAVE_PTHREAD 1
+#cmakedefine HAVE_PTHREAD_PRIO_INHERIT 1
+#cmakedefine PTHREAD_CREATE_JOINABLE @PTHREAD_CREATE_JOINABLE@
+
+/* --- xlocale -------------------------------------------------------- */
+#cmakedefine LOCALE_T_IN_XLOCALE 1
+#cmakedefine WCSTOMBS_L_IN_XLOCALE 1
+
+/* --- UUID (not used by libpq client, kept for completeness) --------- */
+#cmakedefine HAVE_UUID_BSD 1
+#cmakedefine HAVE_UUID_E2FS 1
+#cmakedefine HAVE_UUID_OSSP 1
+
+/* --- Library presence ----------------------------------------------- */
+#cmakedefine HAVE_LIBCRYPTO 1
+#cmakedefine HAVE_LIBSSL 1
+#cmakedefine HAVE_LIBLDAP 1
+#cmakedefine HAVE_LIBPAM 1
+#cmakedefine HAVE_LIBREADLINE 1
+#cmakedefine HAVE_LIBSELINUX 1
+#cmakedefine HAVE_LIBM 1
+#cmakedefine HAVE_LIBLZ4 1
+#cmakedefine HAVE_LIBWLDAP32 1
+#cmakedefine HAVE_LIBXML2 1
+#cmakedefine HAVE_LIBXSLT 1
+#cmakedefine HAVE_LIBZ 1
+#cmakedefine HAVE_LIBZSTD 1
+
+/* --- OpenSSL feature probes ----------------------------------------- */
+#cmakedefine HAVE_ASN1_STRING_GET0_DATA 1
+#cmakedefine HAVE_BIO_METH_NEW 1
+#cmakedefine HAVE_CRYPTO_LOCK 1
+#cmakedefine HAVE_HMAC_CTX_FREE 1
+#cmakedefine HAVE_HMAC_CTX_NEW 1
+#cmakedefine HAVE_OPENSSL_INIT_SSL 1
+#cmakedefine HAVE_SSL_CTX_SET_CERT_CB 1
+#cmakedefine HAVE_SSL_CTX_SET_NUM_TICKETS 1
+#cmakedefine HAVE_X509_GET_SIGNATURE_INFO 1
+
+/* --- Top-level feature toggles -------------------------------------- */
+#cmakedefine USE_OPENSSL 1
+#cmakedefine USE_LDAP 1
+#cmakedefine USE_PAM 1
+#cmakedefine USE_BONJOUR 1
+#cmakedefine USE_BSD_AUTH 1
+#cmakedefine USE_ICU 1
+#cmakedefine USE_INJECTION_POINTS 1
+#cmakedefine USE_LIBXML 1
+#cmakedefine USE_LIBXSLT 1
+#cmakedefine USE_LLVM 1
+#cmakedefine USE_LZ4 1
+#cmakedefine USE_ZSTD 1
+#cmakedefine USE_ASSERT_CHECKING 1
+#cmakedefine USE_NAMED_POSIX_SEMAPHORES 1
+#cmakedefine USE_UNNAMED_POSIX_SEMAPHORES 1
+#cmakedefine USE_SYSV_SEMAPHORES 1
+#cmakedefine USE_SYSV_SHARED_MEMORY 1
+#cmakedefine USE_WIN32_SEMAPHORES 1
+#cmakedefine USE_WIN32_SHARED_MEMORY 1
+#cmakedefine USE_SYSTEMD 1
+#cmakedefine ENABLE_GSS 1
+#cmakedefine ENABLE_NLS 1
+
+/* --- CRC32C selection ---------------------------------------------- */
+#cmakedefine USE_ARMV8_CRC32C 1
+#cmakedefine USE_ARMV8_CRC32C_WITH_RUNTIME_CHECK 1
+#cmakedefine USE_LOONGARCH_CRC32C 1
+#cmakedefine USE_SLICING_BY_8_CRC32C 1
+#cmakedefine USE_SSE42_CRC32C 1
+#cmakedefine USE_SSE42_CRC32C_WITH_RUNTIME_CHECK 1
+#cmakedefine USE_AVX512_POPCNT_WITH_RUNTIME_CHECK 1
+
+/* --- Endianness ---------------------------------------------------- */
+#cmakedefine WORDS_BIGENDIAN 1
+
+/* --- inline / restrict --------------------------------------------- */
+#ifndef __cplusplus
+/* C99 reserves `inline` and `restrict`; no remapping needed. */
+#endif
+
+/* PostgreSQL spells `restrict` as `pg_restrict` and lets configure decide
+ * the spelling. With a C99 compiler we can always use the keyword. */
+#ifndef pg_restrict
+#define pg_restrict restrict
+#endif
+
+#endif /* PG_CONFIG_H */
