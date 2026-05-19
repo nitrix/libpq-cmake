@@ -30,7 +30,7 @@ PG_CONNINFO="host=localhost port=5432 user=postgres password=postgres dbname=pos
 
 | Option               | Default | Description                                           |
 |----------------------|---------|-------------------------------------------------------|
-| `LIBPQ_WITH_OPENSSL` | `OFF`   | Build TLS support (`USE_OPENSSL=1`, requires OpenSSL) |
+| `LIBPQ_WITH_OPENSSL` | `ON`    | Build TLS support (`USE_OPENSSL=1`, requires OpenSSL) |
 | `LIBPQ_BUILD_SHARED` | `OFF`   | Build shared libpq alongside the static one           |
 | `LIBPQ_BUILD_TESTS`  | `OFF`   | Build the `connect_test` smoke test                   |
 | `LIBPQ_INSTALL`      | `ON`    | Generate install / `find_package` export rules        |
