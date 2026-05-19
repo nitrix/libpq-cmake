@@ -57,7 +57,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
     list(APPEND LIBPQ_VENDOR_PG_C_FLAGS -Wno-unguarded-availability-new)
 endif()
 
-set(PG_GENERATED_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include")
+set(PG_GENERATED_INCLUDE_DIR "${PROJECT_BINARY_DIR}/include")
 file(MAKE_DIRECTORY "${PG_GENERATED_INCLUDE_DIR}")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/pg_config.h.in"
