@@ -127,7 +127,7 @@ if(LIBPQ_BUILD_SHARED)
             COMMAND ${CMAKE_COMMAND}
             -DEXPORTS_TXT=${_libpq_dir}/exports.txt
             -DDEF_FILE=${_def_file}
-            -DLIB_NAME=libpq
+            -DLIB_NAME=$<TARGET_FILE_BASE_NAME:libpq_shared>
             -P "${CMAKE_SOURCE_DIR}/cmake/MakeExportsDef.cmake"
             DEPENDS "${_libpq_dir}/exports.txt"
             "${CMAKE_SOURCE_DIR}/cmake/MakeExportsDef.cmake"
