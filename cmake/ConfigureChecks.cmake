@@ -155,11 +155,25 @@ set(ALIGNOF_LONG_LONG_INT 8)
 set(ALIGNOF_DOUBLE 8)
 set(MAXIMUM_ALIGNOF 8)
 
-# socklen_t
+# socklen_t — use a real compile probe. check_symbol_exists() can't reliably
+# detect bare typedefs (it tries `&socklen_t`, which is invalid for a type
+# name), so on toolchains that already typedef socklen_t (e.g. mingw-w64
+# in <ws2tcpip.h> as `int`) the macro stayed undefined and port.h then
+# re-typedef'd it as `unsigned int`, triggering "typedef redefinition with
+# different types" errors when compiling pgport.
 if(WIN32 AND NOT CYGWIN)
-    check_symbol_exists(socklen_t "ws2tcpip.h" HAVE_SOCKLEN_T)
+    check_c_source_compiles("
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
+#include <ws2tcpip.h>
+int main(void) { socklen_t x = 0; (void)x; return 0; }
+" HAVE_SOCKLEN_T)
 else()
-    check_symbol_exists(socklen_t "sys/socket.h" HAVE_SOCKLEN_T)
+    check_c_source_compiles("
+#include <sys/types.h>
+#include <sys/socket.h>
+int main(void) { socklen_t x = 0; (void)x; return 0; }
+" HAVE_SOCKLEN_T)
 endif()
 
 check_struct_has_member("struct sockaddr" sa_len "sys/socket.h"

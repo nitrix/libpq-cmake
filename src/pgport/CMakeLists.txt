@@ -22,6 +22,13 @@ function(_pgport_define_target name extra_flags)
         target_compile_options(${name} PRIVATE ${extra_flags})
     endif()
     target_link_libraries(${name} PUBLIC Threads::Threads)
+    # pg_strong_random.c does `#include <openssl/rand.h>` under USE_OPENSSL,
+    # so pgport itself needs OpenSSL's headers (and libcrypto) when the
+    # build is configured with TLS support. Linking the imported target
+    # also propagates the right include directories to consumers.
+    if(LIBPQ_WITH_OPENSSL)
+        target_link_libraries(${name} PUBLIC OpenSSL::Crypto)
+    endif()
     set_target_properties(${name} PROPERTIES C_STANDARD 99)
 
     # Per-source flag overrides (CRC, POPCNT, XSAVE)

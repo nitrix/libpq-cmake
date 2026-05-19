@@ -16,7 +16,7 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_PASSWORD: postgres
-        ports: ["5432:5432"]
+        ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 2s
@@ -25,10 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { submodules: recursive }
-      - name: Install build deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libssl-dev
       - name: Configure
         env: { CC: clang }
         run: |
@@ -40,7 +36,7 @@ jobs:
         run: cmake --build build
       - name: Test (live Postgres 17)
         env:
-          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+          PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
         run: ctest --test-dir build --output-on-failure
 
   # ---------------------------------------------------------------------
@@ -51,9 +47,7 @@ jobs:
       - uses: actions/checkout@v4
         with: { submodules: recursive }
       - name: Install dependencies
-        run: |
-          brew update
-          brew install cmake ninja openssl@3 postgresql@17
+        run: brew install openssl@3 postgresql@17
       - name: Start Postgres 17
         run: |
           brew services start postgresql@17
@@ -83,7 +77,7 @@ jobs:
         run: cmake --build build
       - name: Test
         env:
-          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+          PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
         run: ctest --test-dir build --output-on-failure
 
   # ---------------------------------------------------------------------
@@ -93,10 +87,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { submodules: recursive }
-      - name: Install OpenSSL via vcpkg
-        shell: pwsh
-        run: |
-          vcpkg install openssl:x64-windows
       - name: Install Postgres 17
         shell: pwsh
         run: |
@@ -116,13 +106,13 @@ jobs:
             -DLIBPQ_WITH_OPENSSL=ON `
             -DLIBPQ_BUILD_SHARED=ON `
             -DLIBPQ_BUILD_TESTS=ON `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+            -DOPENSSL_ROOT_DIR="$env:ProgramFiles\OpenSSL"
       - name: Build
         run: cmake --build build --config Release
       - name: Test
         shell: pwsh
         env:
-          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+          PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
         run: ctest --test-dir build -C Release --output-on-failure
 
   # ---------------------------------------------------------------------
@@ -165,7 +155,7 @@ jobs:
         run: cmake --build build
       - name: Test
         env:
-          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+          PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
         run: ctest --test-dir build --output-on-failure
 
   # ---------------------------------------------------------------------
@@ -194,7 +184,7 @@ jobs:
             Start-Sleep -Seconds 2
           }
       - name: Configure
-        shell: C:\cygwin\bin\bash.exe -eo pipefail '{0}'
+        shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
         run: |
           cd "$GITHUB_WORKSPACE"
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
@@ -203,14 +193,14 @@ jobs:
             -DLIBPQ_BUILD_TESTS=ON \
             -DCMAKE_C_COMPILER=gcc
       - name: Build
-        shell: C:\cygwin\bin\bash.exe -eo pipefail '{0}'
+        shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
         run: |
           cd "$GITHUB_WORKSPACE"
           cmake --build build -- -j$(nproc)
       - name: Test
-        shell: C:\cygwin\bin\bash.exe -eo pipefail '{0}'
+        shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
         env:
-          PG_CONNINFO: "host=localhost port=5432 user=postgres password=postgres dbname=postgres"
+          PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
         run: |
           cd "$GITHUB_WORKSPACE"
           ctest --test-dir build --output-on-failure
