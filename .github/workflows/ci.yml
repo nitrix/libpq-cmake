@@ -185,6 +185,12 @@ jobs:
           "$pgbin/pg_isready.exe" -h localhost -p 5432 || true
           echo "--- psql SELECT version() (PGPASSWORD=postgres) ---"
           PGPASSWORD=postgres "$pgbin/psql.exe" -U postgres -h localhost -p 5432 -d postgres -c "SELECT version()" || true
+          echo "--- ls build/test/ ---"
+          ls -la build/test/ || true
+          echo "--- PATH ---"
+          echo "$PATH"
+          echo "--- ldd build/test/connect_test.exe ---"
+          ldd build/test/connect_test.exe || true
           echo "::endgroup::"
           ctest --test-dir build --output-on-failure -V
 
