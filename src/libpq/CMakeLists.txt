@@ -55,9 +55,6 @@ if(LIBPQ_VENDOR_PG_C_FLAGS)
     target_compile_options(libpq_static PRIVATE ${LIBPQ_VENDOR_PG_C_FLAGS})
 endif()
 if(WIN32 AND NOT CYGWIN AND NOT MSVC)
-    # Force-include our compat shim so fe-connect.c / fe-misc.c / fe-trace.c
-    # see a `gettimeofday` declaration under mingw-w64-clang. See
-    # cmake/win32_clang_compat.h for the full story.
     target_compile_options(libpq_static PRIVATE
         -include "${CMAKE_SOURCE_DIR}/cmake/win32_clang_compat.h")
 endif()
@@ -120,7 +117,6 @@ if(LIBPQ_BUILD_SHARED)
     if(WIN32 AND NOT CYGWIN)
         target_link_libraries(libpq_shared PUBLIC ws2_32 secur32 wldap32 shell32)
 
-        # Generate a .def from exports.txt for symbol export on Windows.
         set(_def_file "${CMAKE_CURRENT_BINARY_DIR}/libpq.def")
         add_custom_command(
             OUTPUT "${_def_file}"
@@ -134,7 +130,6 @@ if(LIBPQ_BUILD_SHARED)
             VERBATIM)
         target_sources(libpq_shared PRIVATE "${_def_file}")
     elseif(NOT APPLE AND UNIX)
-        # ELF: produce a version script from exports.txt
         set(_ver_file "${CMAKE_CURRENT_BINARY_DIR}/libpq.map")
         add_custom_command(
             OUTPUT "${_ver_file}"

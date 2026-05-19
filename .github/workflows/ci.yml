@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ---------------------------------------------------------------------
   linux:
     name: linux-clang (${{ matrix.link }})
     runs-on: ubuntu-latest
@@ -43,7 +42,6 @@ jobs:
           PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
         run: ctest --test-dir build --output-on-failure
 
-  # ---------------------------------------------------------------------
   macos:
     name: macos-clang (${{ matrix.link }})
     runs-on: macos-latest
@@ -53,12 +51,6 @@ jobs:
         link: [shared, static]
     steps:
       - name: Quiet git's default-branch-name advice
-        # macos-latest's git ships without init.defaultBranch set, so
-        # actions/checkout's internal `git init` prints a 13-line hint
-        # about the upcoming master→main default rename in Git 3.0. Our
-        # repo *is* called master and we explicitly check it out by name,
-        # so we just pin init.defaultBranch to match and the hint stops
-        # firing. Purely cosmetic — no behavior change.
         run: git config --global init.defaultBranch master
       - uses: actions/checkout@v4
         with: { submodules: recursive }
@@ -74,9 +66,6 @@ jobs:
           /opt/homebrew/opt/postgresql@17/bin/createuser -s postgres || true
           /opt/homebrew/opt/postgresql@17/bin/psql -U postgres -d postgres \
             -c "ALTER USER postgres WITH PASSWORD 'postgres'" || true
-          # Only create the "postgres" database if it doesn't already exist;
-          # the Homebrew postgresql@17 formula provisions it on first start,
-          # so a blind createdb produces a noisy "already exists" error.
           db_exists=$(/opt/homebrew/opt/postgresql@17/bin/psql -U postgres -d postgres -tAc \
             "SELECT 1 FROM pg_database WHERE datname='postgres'")
           if [ "$db_exists" != "1" ]; then
@@ -96,7 +85,6 @@ jobs:
           PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
         run: ctest --test-dir build --output-on-failure
 
-  # ---------------------------------------------------------------------
   windows-msvc:
     name: windows-msvc (${{ matrix.link }})
     runs-on: windows-latest
@@ -109,13 +97,6 @@ jobs:
         with: { submodules: recursive }
       - name: Start preinstalled Postgres 17
         shell: pwsh
-        # windows-latest (Windows Server 2025) preinstalls PostgreSQL 17.x
-        # as the `postgresql-x64-17` service with startup type Disabled and
-        # superuser password "root" — see actions/runner-images
-        # Windows2025-Readme.md > Databases. Starting it (instead of
-        # choco-installing another copy on top) avoids ~3 minutes per job
-        # and leaves us in a known state where we can reset the password
-        # to match PG_CONNINFO via a one-shot ALTER USER.
         run: |
           $pgbin = "$env:ProgramFiles\PostgreSQL\17\bin"
           Set-Service postgresql-x64-17 -StartupType Manual
@@ -144,7 +125,6 @@ jobs:
           PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
         run: ctest --test-dir build -C Release --output-on-failure
 
-  # ---------------------------------------------------------------------
   windows-msys2-clang64:
     name: windows-msys2-clang64 (${{ matrix.link }})
     runs-on: windows-latest
@@ -171,9 +151,6 @@ jobs:
             mingw-w64-clang-x86_64-pkgconf
       - name: Start preinstalled Postgres 17
         shell: pwsh
-        # Same story as windows-msvc: reuse the preinstalled PostgreSQL 17
-        # service instead of choco-installing another copy. See the comment
-        # in the windows-msvc job for the runner-image reference.
         run: |
           $pgbin = "$env:ProgramFiles\PostgreSQL\17\bin"
           Set-Service postgresql-x64-17 -StartupType Manual
@@ -197,13 +174,6 @@ jobs:
       - name: Test
         env:
           PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
-        # Pre-test diagnostics: confirm the preinstalled Postgres service
-        # is reachable from msys2's POSIX-emulation layer using the same
-        # `localhost` we feed to connect_test, before letting ctest fail
-        # opaquely. Then ctest -V re-prints captured stdout/stderr from
-        # connect_test (which itself now dumps PQhost/PQport/PQuser/
-        # PQdb/PQerrorMessage on failure) so the next failure log is
-        # self-explanatory.
         run: |
           pgbin="/c/Program Files/PostgreSQL/17/bin"
           echo "::group::Network sanity (msys2 CLANG64)"
@@ -218,7 +188,6 @@ jobs:
           echo "::endgroup::"
           ctest --test-dir build --output-on-failure -V
 
-  # ---------------------------------------------------------------------
   windows-cygwin:
     name: windows-cygwin (${{ matrix.link }})
     runs-on: windows-latest
@@ -240,9 +209,6 @@ jobs:
             git
       - name: Start preinstalled Postgres 17
         shell: pwsh
-        # Same story as windows-msvc: reuse the preinstalled PostgreSQL 17
-        # service instead of choco-installing another copy. See the comment
-        # in the windows-msvc job for the runner-image reference.
         run: |
           $pgbin = "$env:ProgramFiles\PostgreSQL\17\bin"
           Set-Service postgresql-x64-17 -StartupType Manual
@@ -257,13 +223,6 @@ jobs:
             -c "ALTER USER postgres WITH PASSWORD 'postgres';"
       - name: Configure
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
-        # We use the Ninja generator instead of cygwin's "Unix Makefiles":
-        # gmake on cygwin chokes on the absolute /cygdrive/d/... prereq
-        # paths CMake bakes into Makefile2 (it reports `No rule to make
-        # target '/cygdrive/d/.../tools/gen_errcodes.c'` for files that
-        # are visibly present on disk). Ninja consumes the same source
-        # paths without that quirk, and it's also what every other Unix-
-        # like job in this workflow already uses.
         run: |
           cd "$GITHUB_WORKSPACE"
           cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release \
@@ -280,14 +239,6 @@ jobs:
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
         env:
           PG_CONNINFO: 'host=localhost port=5432 user=postgres password=postgres dbname=postgres'
-        # Pre-test diagnostics: the cygwin connect_test is a POSIX binary
-        # talking to a Windows-native Postgres listening on 127.0.0.1 /
-        # ::1, so we want to see what cygwin's resolver thinks `localhost`
-        # maps to *and* confirm pg_isready / psql can reach the cluster
-        # before letting ctest fail without context. ctest -V re-prints
-        # captured stdout/stderr from connect_test (which now dumps
-        # PQhost/PQport/PQuser/PQdb/PQerrorMessage on failure) so the
-        # next failure log is self-explanatory.
         run: |
           cd "$GITHUB_WORKSPACE"
           pgbin="/cygdrive/c/Program Files/PostgreSQL/17/bin"

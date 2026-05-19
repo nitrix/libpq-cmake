@@ -1,6 +1,5 @@
 set(_common_dir "${PG_SOURCE_DIR}/src/common")
 
-# kwlist_d.h is generated from src/include/parser/kwlist.h by our C tool.
 set(_kwlist_input "${PG_SOURCE_DIR}/src/include/parser/kwlist.h")
 set(_kwlist_output "${PG_GENERATED_INCLUDE_DIR}/kwlist_d.h")
 add_custom_command(
@@ -14,10 +13,6 @@ add_custom_command(
     VERBATIM)
 add_custom_target(pgcommon_kwlist DEPENDS "${_kwlist_output}")
 
-# pgcommon files that libpq actually consumes (transitively). The full
-# upstream pgcommon also ships backend helpers (relpath.c, controldata_utils.c,
-# blkreftable.c, ...) that would require additional generated catalog
-# headers; libpq doesn't need any of them, so we keep the source list lean.
 set(_common_sources
     base64.c
     encnames.c
@@ -47,12 +42,9 @@ else()
         sha2.c)
 endif()
 
-# Frontend-only helpers also linked into libpq's shared variant.
 set(_common_shlib_extra
     fe_memutils.c
     sprompt.c)
-# logging.c is added only to the static-only variant by upstream policy
-# (shared libpq must not log directly).
 set(_common_static_extra logging.c)
 
 set(_common_abs)
@@ -89,7 +81,7 @@ function(_pgcommon_define_target name sources extra_defs)
     set_target_properties(${name} PROPERTIES C_STANDARD 99)
 endfunction()
 
-_pgcommon_define_target(pgcommon       "${_common_abs_static}" "USE_PRIVATE_ENCODING_FUNCS")
+_pgcommon_define_target(pgcommon       "${_common_abs_static}" "")
 _pgcommon_define_target(pgcommon_shlib "${_common_abs}"         "")
 set_target_properties(pgcommon_shlib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
