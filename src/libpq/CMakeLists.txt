@@ -56,7 +56,7 @@ if(LIBPQ_VENDOR_PG_C_FLAGS)
 endif()
 if(WIN32 AND NOT CYGWIN AND NOT MSVC)
     target_compile_options(libpq_static PRIVATE
-        -include "${CMAKE_SOURCE_DIR}/cmake/win32_clang_compat.h")
+        -include "${PROJECT_SOURCE_DIR}/cmake/win32_clang_compat.h")
 endif()
 target_link_libraries(libpq_static PUBLIC pgcommon pgport Threads::Threads)
 
@@ -101,7 +101,7 @@ if(LIBPQ_BUILD_SHARED)
     endif()
     if(WIN32 AND NOT CYGWIN AND NOT MSVC)
         target_compile_options(libpq_shared PRIVATE
-            -include "${CMAKE_SOURCE_DIR}/cmake/win32_clang_compat.h")
+            -include "${PROJECT_SOURCE_DIR}/cmake/win32_clang_compat.h")
     endif()
     target_link_libraries(libpq_shared PUBLIC
         pgcommon_shlib pgport_shlib Threads::Threads)
@@ -124,9 +124,9 @@ if(LIBPQ_BUILD_SHARED)
             -DEXPORTS_TXT=${_libpq_dir}/exports.txt
             -DDEF_FILE=${_def_file}
             -DLIB_NAME=$<TARGET_FILE_PREFIX:libpq_shared>$<TARGET_FILE_BASE_NAME:libpq_shared>
-            -P "${CMAKE_SOURCE_DIR}/cmake/MakeExportsDef.cmake"
+            -P "${PROJECT_SOURCE_DIR}/cmake/MakeExportsDef.cmake"
             DEPENDS "${_libpq_dir}/exports.txt"
-            "${CMAKE_SOURCE_DIR}/cmake/MakeExportsDef.cmake"
+            "${PROJECT_SOURCE_DIR}/cmake/MakeExportsDef.cmake"
             VERBATIM)
         target_sources(libpq_shared PRIVATE "${_def_file}")
     elseif(NOT APPLE AND UNIX)
@@ -136,9 +136,9 @@ if(LIBPQ_BUILD_SHARED)
             COMMAND ${CMAKE_COMMAND}
             -DEXPORTS_TXT=${_libpq_dir}/exports.txt
             -DMAP_FILE=${_ver_file}
-            -P "${CMAKE_SOURCE_DIR}/cmake/MakeExportsMap.cmake"
+            -P "${PROJECT_SOURCE_DIR}/cmake/MakeExportsMap.cmake"
             DEPENDS "${_libpq_dir}/exports.txt"
-            "${CMAKE_SOURCE_DIR}/cmake/MakeExportsMap.cmake"
+            "${PROJECT_SOURCE_DIR}/cmake/MakeExportsMap.cmake"
             VERBATIM)
         add_custom_target(libpq_versionscript DEPENDS "${_ver_file}")
         add_dependencies(libpq_shared libpq_versionscript)
