@@ -31,7 +31,11 @@ jobs:
           sudo apt-get install -y clang cmake ninja-build pkg-config libssl-dev
       - name: Configure
         env: { CC: clang }
-        run: cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: |
+          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DLIBPQ_WITH_OPENSSL=ON \
+            -DLIBPQ_BUILD_SHARED=ON \
+            -DLIBPQ_BUILD_TESTS=ON
       - name: Build
         run: cmake --build build
       - name: Test (live Postgres 17)
@@ -60,10 +64,20 @@ jobs:
           /opt/homebrew/opt/postgresql@17/bin/createuser -s postgres || true
           /opt/homebrew/opt/postgresql@17/bin/psql -U postgres -d postgres \
             -c "ALTER USER postgres WITH PASSWORD 'postgres'" || true
-          /opt/homebrew/opt/postgresql@17/bin/createdb -U postgres postgres || true
+          # Only create the "postgres" database if it doesn't already exist;
+          # the Homebrew postgresql@17 formula provisions it on first start,
+          # so a blind createdb produces a noisy "already exists" error.
+          db_exists=$(/opt/homebrew/opt/postgresql@17/bin/psql -U postgres -d postgres -tAc \
+            "SELECT 1 FROM pg_database WHERE datname='postgres'")
+          if [ "$db_exists" != "1" ]; then
+            /opt/homebrew/opt/postgresql@17/bin/createdb -U postgres postgres
+          fi
       - name: Configure
         run: |
           cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DLIBPQ_WITH_OPENSSL=ON \
+            -DLIBPQ_BUILD_SHARED=ON \
+            -DLIBPQ_BUILD_TESTS=ON \
             -DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
       - name: Build
         run: cmake --build build
@@ -99,6 +113,9 @@ jobs:
         shell: pwsh
         run: |
           cmake -G "Visual Studio 17 2022" -A x64 -S . -B build `
+            -DLIBPQ_WITH_OPENSSL=ON `
+            -DLIBPQ_BUILD_SHARED=ON `
+            -DLIBPQ_BUILD_TESTS=ON `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
       - name: Build
         run: cmake --build build --config Release
@@ -140,7 +157,10 @@ jobs:
           }
       - name: Configure
         run: |
-          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DLIBPQ_WITH_OPENSSL=ON \
+            -DLIBPQ_BUILD_SHARED=ON \
+            -DLIBPQ_BUILD_TESTS=ON
       - name: Build
         run: cmake --build build
       - name: Test
@@ -178,6 +198,9 @@ jobs:
         run: |
           cd "$GITHUB_WORKSPACE"
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DLIBPQ_WITH_OPENSSL=ON \
+            -DLIBPQ_BUILD_SHARED=ON \
+            -DLIBPQ_BUILD_TESTS=ON \
             -DCMAKE_C_COMPILER=gcc
       - name: Build
         shell: C:\cygwin\bin\bash.exe -eo pipefail '{0}'
