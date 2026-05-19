@@ -56,6 +56,29 @@ include(FindPgPortName)
 include(ConfigureChecks)
 include(PortSources)
 
+# --- Warning suppressions for vendored upstream-PostgreSQL sources -------
+#
+# Upstream Postgres is portable C that triggers a couple of clang-only
+# warnings we can't fix from this repo. We funnel them through one variable
+# applied PRIVATE-ly to pgport / pgcommon / libpq so consumers of
+# libpq::libpq don't inherit any -Wno-* flags from us.
+set(LIBPQ_VENDOR_PG_C_FLAGS "")
+if(CMAKE_C_COMPILER_ID MATCHES "^(Clang|AppleClang)$")
+    # `pg_attribute_printf(...)` expands to
+    # `__attribute__((format(gnu_printf, ...)))` on GCC-style compilers.
+    # Plain clang / AppleClang only know the `printf` archetype on
+    # non-MinGW targets and emit -Wignored-attributes for every printf-like
+    # declaration in port.h / fe_memutils.h (hundreds per build).
+    list(APPEND LIBPQ_VENDOR_PG_C_FLAGS -Wno-ignored-attributes)
+endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+    # snprintf.c calls strchrnul(), introduced in the macOS 15.4 SDK. The
+    # macos-15 runners build with a 15.0 deployment target but already have
+    # strchrnul at runtime, so the unguarded-availability diagnostic is
+    # cosmetic. Silencing it keeps the macOS log clean.
+    list(APPEND LIBPQ_VENDOR_PG_C_FLAGS -Wno-unguarded-availability-new)
+endif()
+
 # --- Generated headers ----------------------------------------------------
 set(PG_GENERATED_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include")
 file(MAKE_DIRECTORY "${PG_GENERATED_INCLUDE_DIR}")

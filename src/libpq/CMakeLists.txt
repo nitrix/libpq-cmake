@@ -51,6 +51,16 @@ if(WIN32 AND NOT CYGWIN)
 endif()
 
 target_compile_definitions(libpq_static PRIVATE FRONTEND _GNU_SOURCE)
+if(LIBPQ_VENDOR_PG_C_FLAGS)
+    target_compile_options(libpq_static PRIVATE ${LIBPQ_VENDOR_PG_C_FLAGS})
+endif()
+if(WIN32 AND NOT CYGWIN AND NOT MSVC)
+    # Force-include our compat shim so fe-connect.c / fe-misc.c / fe-trace.c
+    # see a `gettimeofday` declaration under mingw-w64-clang. See
+    # cmake/win32_clang_compat.h for the full story.
+    target_compile_options(libpq_static PRIVATE
+        -include "${CMAKE_SOURCE_DIR}/cmake/win32_clang_compat.h")
+endif()
 target_link_libraries(libpq_static PUBLIC pgcommon pgport Threads::Threads)
 
 if(LIBPQ_WITH_OPENSSL)
@@ -89,6 +99,13 @@ if(LIBPQ_BUILD_SHARED)
 
     target_compile_definitions(libpq_shared PRIVATE
         FRONTEND _GNU_SOURCE SO_MAJOR_VERSION=5)
+    if(LIBPQ_VENDOR_PG_C_FLAGS)
+        target_compile_options(libpq_shared PRIVATE ${LIBPQ_VENDOR_PG_C_FLAGS})
+    endif()
+    if(WIN32 AND NOT CYGWIN AND NOT MSVC)
+        target_compile_options(libpq_shared PRIVATE
+            -include "${CMAKE_SOURCE_DIR}/cmake/win32_clang_compat.h")
+    endif()
     target_link_libraries(libpq_shared PUBLIC
         pgcommon_shlib pgport_shlib Threads::Threads)
 

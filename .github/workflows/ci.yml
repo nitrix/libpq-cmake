@@ -87,18 +87,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { submodules: recursive }
-      - name: Install Postgres 17
+      - name: Start preinstalled Postgres 17
         shell: pwsh
+        # windows-latest (Windows Server 2025) preinstalls PostgreSQL 17.x
+        # as the `postgresql-x64-17` service with startup type Disabled and
+        # superuser password "root" — see actions/runner-images
+        # Windows2025-Readme.md > Databases. Starting it (instead of
+        # choco-installing another copy on top) avoids ~3 minutes per job
+        # and leaves us in a known state where we can reset the password
+        # to match PG_CONNINFO via a one-shot ALTER USER.
         run: |
-          choco install postgresql17 --params "/Password:postgres" --no-progress -y
-          $env:Path += ";$env:ProgramFiles\PostgreSQL\17\bin"
-          "$env:ProgramFiles\PostgreSQL\17\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
-          # Confirm it accepts the password
-          $env:PGPASSWORD = "postgres"
+          $pgbin = "$env:ProgramFiles\PostgreSQL\17\bin"
+          Set-Service postgresql-x64-17 -StartupType Manual
+          Start-Service postgresql-x64-17
+          $env:PGPASSWORD = "root"
           for ($i=0; $i -lt 30; $i++) {
-            if (pg_isready -h localhost -p 5432) { break }
+            if (& "$pgbin\pg_isready.exe" -h localhost -p 5432) { break }
             Start-Sleep -Seconds 2
           }
+          & "$pgbin\psql.exe" -U postgres -h localhost -p 5432 -d postgres `
+            -v ON_ERROR_STOP=1 `
+            -c "ALTER USER postgres WITH PASSWORD 'postgres';"
       - name: Configure
         shell: pwsh
         run: |
@@ -136,15 +145,23 @@ jobs:
             mingw-w64-clang-x86_64-ninja
             mingw-w64-clang-x86_64-openssl
             mingw-w64-clang-x86_64-pkgconf
-      - name: Install Postgres 17 (native, started via choco)
+      - name: Start preinstalled Postgres 17
         shell: pwsh
+        # Same story as windows-msvc: reuse the preinstalled PostgreSQL 17
+        # service instead of choco-installing another copy. See the comment
+        # in the windows-msvc job for the runner-image reference.
         run: |
-          choco install postgresql17 --params "/Password:postgres" --no-progress -y
-          $env:PGPASSWORD = "postgres"
+          $pgbin = "$env:ProgramFiles\PostgreSQL\17\bin"
+          Set-Service postgresql-x64-17 -StartupType Manual
+          Start-Service postgresql-x64-17
+          $env:PGPASSWORD = "root"
           for ($i=0; $i -lt 30; $i++) {
-            if (& "$env:ProgramFiles\PostgreSQL\17\bin\pg_isready.exe" -h localhost -p 5432) { break }
+            if (& "$pgbin\pg_isready.exe" -h localhost -p 5432) { break }
             Start-Sleep -Seconds 2
           }
+          & "$pgbin\psql.exe" -U postgres -h localhost -p 5432 -d postgres `
+            -v ON_ERROR_STOP=1 `
+            -c "ALTER USER postgres WITH PASSWORD 'postgres';"
       - name: Configure
         run: |
           cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release \
@@ -170,24 +187,39 @@ jobs:
           packages: >-
             gcc-core
             cmake
-            make
+            ninja
             libssl-devel
             pkg-config
             git
-      - name: Install Postgres 17 (native, served on TCP)
+      - name: Start preinstalled Postgres 17
         shell: pwsh
+        # Same story as windows-msvc: reuse the preinstalled PostgreSQL 17
+        # service instead of choco-installing another copy. See the comment
+        # in the windows-msvc job for the runner-image reference.
         run: |
-          choco install postgresql17 --params "/Password:postgres" --no-progress -y
-          $env:PGPASSWORD = "postgres"
+          $pgbin = "$env:ProgramFiles\PostgreSQL\17\bin"
+          Set-Service postgresql-x64-17 -StartupType Manual
+          Start-Service postgresql-x64-17
+          $env:PGPASSWORD = "root"
           for ($i=0; $i -lt 30; $i++) {
-            if (& "$env:ProgramFiles\PostgreSQL\17\bin\pg_isready.exe" -h localhost -p 5432) { break }
+            if (& "$pgbin\pg_isready.exe" -h localhost -p 5432) { break }
             Start-Sleep -Seconds 2
           }
+          & "$pgbin\psql.exe" -U postgres -h localhost -p 5432 -d postgres `
+            -v ON_ERROR_STOP=1 `
+            -c "ALTER USER postgres WITH PASSWORD 'postgres';"
       - name: Configure
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
+        # We use the Ninja generator instead of cygwin's "Unix Makefiles":
+        # gmake on cygwin chokes on the absolute /cygdrive/d/... prereq
+        # paths CMake bakes into Makefile2 (it reports `No rule to make
+        # target '/cygdrive/d/.../tools/gen_errcodes.c'` for files that
+        # are visibly present on disk). Ninja consumes the same source
+        # paths without that quirk, and it's also what every other Unix-
+        # like job in this workflow already uses.
         run: |
           cd "$GITHUB_WORKSPACE"
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=Release \
             -DLIBPQ_WITH_OPENSSL=ON \
             -DLIBPQ_BUILD_SHARED=ON \
             -DLIBPQ_BUILD_TESTS=ON \
@@ -196,7 +228,7 @@ jobs:
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
         run: |
           cd "$GITHUB_WORKSPACE"
-          cmake --build build -- -j$(nproc)
+          cmake --build build
       - name: Test
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
         env:
